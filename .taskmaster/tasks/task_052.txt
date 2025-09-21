@@ -1,0 +1,11 @@
+# Task ID: 52
+# Title: Backend: Implement Job Creation API Endpoint
+# Status: done
+# Dependencies: 51
+# Priority: high
+# Description: Create the primary API endpoint that accepts a JSON payload to initiate a new landing page generation job.
+# Details:
+This endpoint will validate the input parameters (productName, urlProducto, etc.), create a new job record in the database with 'pending' status, and then trigger the n8n orchestration workflow.
+
+# Test Strategy:
+Test the endpoint with valid and invalid JSON payloads. Verify that a new job is created in the database and that the n8n webhook is correctly triggered.

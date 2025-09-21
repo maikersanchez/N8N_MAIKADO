@@ -1,0 +1,11 @@
+# Task ID: 55
+# Title: Agent: Develop Data Extractor Agent
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Create a microservice or n8n custom node to scrape product information from a given URL.
+# Details:
+The agent receives `urlProducto`, performs an HTTP request, and parses the HTML to extract product details like description, specs, and materials. It should handle common anti-scraping measures.
+
+# Test Strategy:
+Test with a variety of Shopify product page URLs. Verify that the extracted data is accurate and structured correctly as a JSON object.

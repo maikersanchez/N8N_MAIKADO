@@ -1,0 +1,11 @@
+# Task ID: 67
+# Title: Frontend: Build Dashboard UI - New Job Form
+# Status: done
+# Dependencies: 52
+# Priority: medium
+# Description: Develop the web form in the dashboard for users to submit new landing page requests.
+# Details:
+The form will have fields for all input parameters (productName, productPrice, etc.). On submission, it will call the job creation API endpoint.
+
+# Test Strategy:
+Test form validation and submission. Verify that a successful submission triggers the backend API and a new job appears in the monitoring view.

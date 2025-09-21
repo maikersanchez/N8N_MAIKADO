@@ -1,0 +1,11 @@
+# Task ID: 69
+# Title: Frontend: Build Dashboard UI - Analytics Dashboard
+# Status: done
+# Dependencies: 66
+# Priority: low
+# Description: Develop the dashboard to visualize landing page performance and conversion rates.
+# Details:
+This UI will query the aggregated analytics data from the backend and display it using charts and graphs. Key metrics include conversion rate, views, and revenue per page.
+
+# Test Strategy:
+Populate the database with sample analytics data and verify that the charts render correctly and display the right information.

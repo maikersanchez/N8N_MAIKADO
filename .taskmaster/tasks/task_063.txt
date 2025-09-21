@@ -1,0 +1,11 @@
+# Task ID: 63
+# Title: Integration: Shopify Page Creation
+# Status: done
+# Dependencies: 61
+# Priority: high
+# Description: Integrate the Shopify Admin API to programmatically create a new page.
+# Details:
+Add a final step in the n8n workflow to use the Shopify API. This step will create a new 'Page' in the Shopify store, set its title, and populate its content with the generated HTML.
+
+# Test Strategy:
+Run a test workflow and verify that a new page is created in the target Shopify store with the correct content. Check that the page is accessible.

@@ -1,0 +1,76 @@
+Project Title: AI-Powered High-Conversion Shopify Landing Page Factory (wf_makiado)
+
+Primary Goal: To create a fully automated system, orchestrated by n8n, that generates high-conversion Shopify landing pages based on a set of input parameters. The system will employ specialized AI agents for content, design, and architecture.
+
+Input Parameters (JSON):
+- productName: string
+- productPrice: string
+- language: string (e.g., "es", "en")
+- urlProducto: string
+- customerPains: string
+- imageCount: number
+- videoCount: number
+- templateId: string
+- niche: string
+
+Core AI Agents & Workflow:
+
+1.  **Data Extractor Agent:**
+    -   Receives `urlProducto`.
+    -   Scrapes the URL to extract detailed product information (description, materials, technical specs, etc.).
+
+2.  **Copywriter Agent:**
+    -   Analyzes extracted data and input `customerPains`.
+    -   Generates persuasive copy using frameworks like AIDA and FMO.
+    -   Can suggest new customer pain points based on the product niche.
+    -   Outputs all content in the specified `language`.
+
+3.  **Asset Generator Agent (Google Tools):**
+    -   Generates `imageCount` professional images that enhance original product photos.
+    -   Generates `videoCount` short videos for the landing page.
+    -   Assets should be designed to address customer pains and align with the copy.
+
+4.  **Architect Agent:**
+    -   Defines the final page structure as a JSON object based on the "Above the Fold" / "Below the Fold" principles.
+    -   The structure must include: Title, Subtitle, Visuals (Image Gallery), Social Proof, CTA, Features/Objections, Comparison Table, Reviews, FAQ, and a Founder's Note.
+
+5.  **Web Developer Agent:**
+    -   Renders the final HTML by combining the structure from the Architect, content from the Copywriter, and assets from the Asset Generator.
+    -   **Crucially, the agent must build the page using professional UI components from Acernity UI and Magic UI libraries.**
+    -   The design must be clean, professional, and follow modern UX/UI best practices.
+
+Orchestration:
+-   A central n8n workflow will manage the entire process, triggering each agent in sequence and passing data between them.
+
+Deployment:
+-   The final generated website files (HTML, CSS, images, videos) will be saved to a Google Drive folder named after the `productName`.
+-   The landing page will be programmatically created as a new "Page" within the Shopify store.
+
+Output:
+-   The system must log the entire process for debugging.
+-   The final output will be the URL of the newly created Shopify page.
+
+---
+
+**Backend Control Panel & Monitoring System:**
+
+This backend is the central nervous system of the project. It is not merely a trigger for n8n but a full-fledged management and analytics platform.
+
+**Core Responsibilities:**
+
+1.  **Workflow Orchestration & Job Management:**
+    -   Provides the primary API for initiating landing page generation jobs.
+    -   Logs every job request to a persistent database (e.g., PostgreSQL, MongoDB).
+    -   Tracks the status of each job ('pending', 'in-progress', 'completed', 'failed').
+    -   Stores the final Shopify Page URL and Google Drive folder URL upon successful completion.
+
+2.  **Analytics & Monitoring:**
+    -   Receives and stores conversion data from the tracking scripts on the live landing pages.
+    -   Aggregates analytics to track the performance of each generated page.
+
+3.  **Dashboard UI:**
+    -   A web-based dashboard for the user to manage the system.
+    -   **Features:**
+        -   A form to submit new landing page generation requests.
+        -   A view to monitor the status of all active and completed jobs.
+        -   A dashboard to visualize key store metrics, product performance, and landing page conversion rates.

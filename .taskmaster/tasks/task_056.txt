@@ -1,0 +1,11 @@
+# Task ID: 56
+# Title: Agent: Develop Copywriter Agent
+# Status: done
+# Dependencies: 55
+# Priority: high
+# Description: Create a service that uses a large language model to generate persuasive marketing copy.
+# Details:
+The agent will receive product data and customer pains. It will use prompts engineered around AIDA and FMO frameworks to generate all text content (headlines, body, FAQs) in the specified language.
+
+# Test Strategy:
+Provide sample product data and pains. Evaluate the generated copy for persuasiveness, relevance, and grammatical correctness in different languages (e.g., 'en', 'es').

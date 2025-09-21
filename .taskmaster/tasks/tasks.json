@@ -1,0 +1,321 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 51,
+        "title": "Backend: Design Database Schema",
+        "description": "Design and create the database schema for the control panel using PostgreSQL or MongoDB.",
+        "details": "The schema must include tables/collections for jobs (with status, input parameters, output URLs), analytics (conversion data, page views), and users. This forms the foundation for the entire management system.",
+        "testStrategy": "Review the schema against PRD requirements. Ensure all fields for job tracking and analytics are present. Use a migration tool to version the schema.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 52,
+        "title": "Backend: Implement Job Creation API Endpoint",
+        "description": "Create the primary API endpoint that accepts a JSON payload to initiate a new landing page generation job.",
+        "details": "This endpoint will validate the input parameters (productName, urlProducto, etc.), create a new job record in the database with 'pending' status, and then trigger the n8n orchestration workflow.",
+        "testStrategy": "Test the endpoint with valid and invalid JSON payloads. Verify that a new job is created in the database and that the n8n webhook is correctly triggered.",
+        "priority": "high",
+        "dependencies": [
+          51
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 53,
+        "title": "Backend: Implement Job Status Tracking & Update API",
+        "description": "Develop endpoints for n8n to update job status and for the frontend to query job status.",
+        "details": "Create a secure endpoint for n8n to post updates ('in-progress', 'completed', 'failed'). Create another endpoint for the dashboard UI to poll or subscribe to status changes for a given job or all jobs.",
+        "testStrategy": "Simulate calls from n8n to update job status and verify database changes. Test the query endpoint to ensure it returns correct data for the UI.",
+        "priority": "high",
+        "dependencies": [
+          51
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 54,
+        "title": "n8n: Setup Main Orchestration Workflow",
+        "description": "Create the main n8n workflow that will manage the sequence of agent execution.",
+        "details": "This workflow will be triggered by the backend API. It will define the high-level flow: receive data, call Data Extractor, then Copywriter, etc., and handle data passing between steps. Initial setup can use mock nodes.",
+        "testStrategy": "Trigger the workflow with sample data and ensure it flows through the mock steps in the correct order. Verify data is passed correctly between nodes.",
+        "priority": "high",
+        "dependencies": [
+          52
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 55,
+        "title": "Agent: Develop Data Extractor Agent",
+        "description": "Create a microservice or n8n custom node to scrape product information from a given URL.",
+        "details": "The agent receives `urlProducto`, performs an HTTP request, and parses the HTML to extract product details like description, specs, and materials. It should handle common anti-scraping measures.",
+        "testStrategy": "Test with a variety of Shopify product page URLs. Verify that the extracted data is accurate and structured correctly as a JSON object.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 56,
+        "title": "Agent: Develop Copywriter Agent",
+        "description": "Create a service that uses a large language model to generate persuasive marketing copy.",
+        "details": "The agent will receive product data and customer pains. It will use prompts engineered around AIDA and FMO frameworks to generate all text content (headlines, body, FAQs) in the specified language.",
+        "testStrategy": "Provide sample product data and pains. Evaluate the generated copy for persuasiveness, relevance, and grammatical correctness in different languages (e.g., 'en', 'es').",
+        "priority": "high",
+        "dependencies": [
+          55
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 57,
+        "title": "Agent: Develop Asset Generator Agent (Images)",
+        "description": "Create a service to generate professional product images.",
+        "details": "This agent will take original product photos (or descriptions) and use an image generation AI (like DALL-E 3 or Midjourney via API) to create `imageCount` enhanced, professional lifestyle or feature-focused images.",
+        "testStrategy": "Test with various product types. Verify that the generated images are high-quality, relevant to the product, and align with marketing goals.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 58,
+        "title": "Agent: Develop Asset Generator Agent (Videos)",
+        "description": "Create a service to generate short promotional videos.",
+        "details": "This agent will use a video generation API to create `videoCount` short videos (e.g., 5-15 seconds) for the landing page, using the generated images and copy snippets.",
+        "testStrategy": "Verify that the service can generate videos and that they are in a web-compatible format. Check video quality and relevance.",
+        "priority": "low",
+        "dependencies": [
+          57
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 59,
+        "title": "Agent: Develop Architect Agent",
+        "description": "Create a service that defines the final landing page structure as a JSON object.",
+        "details": "This agent takes all the generated content and organizes it into a structured JSON based on conversion-focused design principles. The JSON will define the order and content of sections like 'Hero', 'Features', 'Social Proof', 'FAQ', etc.",
+        "testStrategy": "Input sample content and verify that the output JSON is well-formed and logically structured according to the 'Above the Fold'/'Below the Fold' principles.",
+        "priority": "high",
+        "dependencies": [
+          56,
+          57
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 60,
+        "title": "Agent: Setup Web Developer Agent Environment",
+        "description": "Set up the rendering environment for the Web Developer Agent, including Acernity UI and Magic UI libraries.",
+        "details": "Create a Node.js service or a containerized environment with all necessary dependencies (e.g., React/Next.js for SSR, or a templating engine) and the specified UI component libraries installed.",
+        "testStrategy": "Create a simple test page using components from both Acernity UI and Magic UI to ensure they render correctly within the chosen environment.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 61,
+        "title": "Agent: Implement Web Developer Agent Rendering Logic",
+        "description": "Build the core logic to render final HTML from the Architect's JSON structure.",
+        "details": "This agent will parse the JSON from the Architect Agent, map each section to a corresponding professional UI component from Acernity/Magic UI, populate it with content from the Copywriter and assets, and render the final static HTML and CSS.",
+        "testStrategy": "Feed a complete JSON structure from the Architect Agent and verify that a complete, styled, and responsive HTML page is generated. Check for correct component usage.",
+        "priority": "high",
+        "dependencies": [
+          59,
+          60
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 62,
+        "title": "Integration: Google Drive File Deployment",
+        "description": "Integrate the Google Drive API to save all generated website files.",
+        "details": "In the n8n workflow, add a step that creates a new folder named after the `productName` in a designated Google Drive location and uploads the final HTML, CSS, images, and videos.",
+        "testStrategy": "Run a test workflow and verify that a folder is created on Google Drive and all expected files are present and correct inside it.",
+        "priority": "medium",
+        "dependencies": [
+          61
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 63,
+        "title": "Integration: Shopify Page Creation",
+        "description": "Integrate the Shopify Admin API to programmatically create a new page.",
+        "details": "Add a final step in the n8n workflow to use the Shopify API. This step will create a new 'Page' in the Shopify store, set its title, and populate its content with the generated HTML.",
+        "testStrategy": "Run a test workflow and verify that a new page is created in the target Shopify store with the correct content. Check that the page is accessible.",
+        "priority": "high",
+        "dependencies": [
+          61
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 64,
+        "title": "n8n: Full Workflow Integration",
+        "description": "Integrate all developed agents and deployment steps into the main n8n workflow.",
+        "details": "Replace mock nodes in the main workflow with the actual agent services and API calls. Configure data mapping to ensure the output of one agent is correctly passed as the input to the next.",
+        "testStrategy": "Perform an end-to-end test. Trigger the workflow via the backend API and verify that it runs through all agents, creates files on Google Drive, and creates a page on Shopify.",
+        "priority": "high",
+        "dependencies": [
+          54,
+          55,
+          56,
+          57,
+          58,
+          61,
+          62,
+          63
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 65,
+        "title": "n8n: Implement Workflow Logging and Error Handling",
+        "description": "Add robust logging and error handling to the n8n workflow.",
+        "details": "Implement try-catch blocks around critical agent calls. Log key events and data payloads for debugging. On failure, the workflow must update the job status to 'failed' via the backend API and log the error details.",
+        "testStrategy": "Intentionally cause an agent to fail (e.g., with a bad URL) and verify that the workflow catches the error, logs it, and updates the job status correctly.",
+        "priority": "medium",
+        "dependencies": [
+          64
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 66,
+        "title": "Backend: Implement Analytics Ingestion API",
+        "description": "Create an API endpoint to receive and store conversion data from live landing pages.",
+        "details": "This endpoint will receive data from the tracking script (e.g., page views, add-to-cart clicks, purchases). It should be highly available and capable of handling high traffic. Data will be stored in the analytics table.",
+        "testStrategy": "Send mock tracking data to the endpoint and verify it is correctly parsed and stored in the database. Perform load testing to ensure stability.",
+        "priority": "medium",
+        "dependencies": [
+          51
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 67,
+        "title": "Frontend: Build Dashboard UI - New Job Form",
+        "description": "Develop the web form in the dashboard for users to submit new landing page requests.",
+        "details": "The form will have fields for all input parameters (productName, productPrice, etc.). On submission, it will call the job creation API endpoint.",
+        "testStrategy": "Test form validation and submission. Verify that a successful submission triggers the backend API and a new job appears in the monitoring view.",
+        "priority": "medium",
+        "dependencies": [
+          52
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 68,
+        "title": "Frontend: Build Dashboard UI - Job Status View",
+        "description": "Create the dashboard view to monitor all active and completed jobs.",
+        "details": "This view will fetch data from the job status API and display a table or list of jobs with their current status, creation date, and links to the final Shopify page and Google Drive folder.",
+        "testStrategy": "Verify that the view accurately reflects the job statuses from the database. Test that the page auto-updates or can be manually refreshed.",
+        "priority": "medium",
+        "dependencies": [
+          53
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 69,
+        "title": "Frontend: Build Dashboard UI - Analytics Dashboard",
+        "description": "Develop the dashboard to visualize landing page performance and conversion rates.",
+        "details": "This UI will query the aggregated analytics data from the backend and display it using charts and graphs. Key metrics include conversion rate, views, and revenue per page.",
+        "testStrategy": "Populate the database with sample analytics data and verify that the charts render correctly and display the right information.",
+        "priority": "low",
+        "dependencies": [
+          66
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 70,
+        "title": "Deployment: Create Analytics Tracking Script",
+        "description": "Develop the JavaScript tracking script to be embedded in the generated landing pages.",
+        "details": "The script will monitor user interactions (e.g., CTA clicks) and send this data to the analytics ingestion API. It must be lightweight and not impact page performance.",
+        "testStrategy": "Embed the script on a test page, perform actions, and verify that the correct data is sent to and received by the analytics endpoint.",
+        "priority": "medium",
+        "dependencies": [
+          61,
+          66
+        ],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 71,
+        "title": "Creación de un guion de video UGC",
+        "description": "Crear un guion de video UGC de alta conversión, incluyendo la estructura, el texto y un storyboard visual.",
+        "details": "",
+        "testStrategy": "",
+        "status": "done",
+        "dependencies": [],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Definir la estructura del guion",
+            "description": "",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 71
+          },
+          {
+            "id": 2,
+            "title": "Escribir el guion de video",
+            "description": "",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 71
+          },
+          {
+            "id": 3,
+            "title": "Crear el storyboard visual",
+            "description": "",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 71
+          },
+          {
+            "id": 4,
+            "title": "Integrar el guion con el agente de video",
+            "description": "",
+            "details": "",
+            "status": "done",
+            "dependencies": [],
+            "parentTaskId": 71
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-09-01T20:17:51.829Z",
+      "updated": "2025-09-21T06:37:59.658Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

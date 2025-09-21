@@ -1,0 +1,11 @@
+# Task ID: 62
+# Title: Integration: Google Drive File Deployment
+# Status: done
+# Dependencies: 61
+# Priority: medium
+# Description: Integrate the Google Drive API to save all generated website files.
+# Details:
+In the n8n workflow, add a step that creates a new folder named after the `productName` in a designated Google Drive location and uploads the final HTML, CSS, images, and videos.
+
+# Test Strategy:
+Run a test workflow and verify that a folder is created on Google Drive and all expected files are present and correct inside it.

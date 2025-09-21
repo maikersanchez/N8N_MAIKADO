@@ -1,0 +1,11 @@
+# Task ID: 53
+# Title: Backend: Implement Job Status Tracking & Update API
+# Status: done
+# Dependencies: 51
+# Priority: high
+# Description: Develop endpoints for n8n to update job status and for the frontend to query job status.
+# Details:
+Create a secure endpoint for n8n to post updates ('in-progress', 'completed', 'failed'). Create another endpoint for the dashboard UI to poll or subscribe to status changes for a given job or all jobs.
+
+# Test Strategy:
+Simulate calls from n8n to update job status and verify database changes. Test the query endpoint to ensure it returns correct data for the UI.

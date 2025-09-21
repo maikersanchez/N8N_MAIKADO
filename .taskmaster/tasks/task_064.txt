@@ -1,0 +1,11 @@
+# Task ID: 64
+# Title: n8n: Full Workflow Integration
+# Status: done
+# Dependencies: 54, 55, 56, 57, 58, 61, 62, 63
+# Priority: high
+# Description: Integrate all developed agents and deployment steps into the main n8n workflow.
+# Details:
+Replace mock nodes in the main workflow with the actual agent services and API calls. Configure data mapping to ensure the output of one agent is correctly passed as the input to the next.
+
+# Test Strategy:
+Perform an end-to-end test. Trigger the workflow via the backend API and verify that it runs through all agents, creates files on Google Drive, and creates a page on Shopify.

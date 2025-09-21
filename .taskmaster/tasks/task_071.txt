@@ -1,0 +1,37 @@
+# Task ID: 71
+# Title: Creación de un guion de video UGC
+# Status: pending
+# Dependencies: None
+# Priority: medium
+# Description: Crear un guion de video UGC de alta conversión, incluyendo la estructura, el texto y un storyboard visual.
+# Details:
+
+
+# Test Strategy:
+
+
+# Subtasks:
+## 1. Definir la estructura del guion [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 2. Escribir el guion de video [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 3. Crear el storyboard visual [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+
+## 4. Integrar el guion con el agente de video [pending]
+### Dependencies: None
+### Description: 
+### Details:
+
+

@@ -1,0 +1,11 @@
+# Task ID: 65
+# Title: n8n: Implement Workflow Logging and Error Handling
+# Status: done
+# Dependencies: 64
+# Priority: medium
+# Description: Add robust logging and error handling to the n8n workflow.
+# Details:
+Implement try-catch blocks around critical agent calls. Log key events and data payloads for debugging. On failure, the workflow must update the job status to 'failed' via the backend API and log the error details.
+
+# Test Strategy:
+Intentionally cause an agent to fail (e.g., with a bad URL) and verify that the workflow catches the error, logs it, and updates the job status correctly.

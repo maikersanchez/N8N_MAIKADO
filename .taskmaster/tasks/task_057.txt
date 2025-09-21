@@ -1,0 +1,11 @@
+# Task ID: 57
+# Title: Agent: Develop Asset Generator Agent (Images)
+# Status: done
+# Dependencies: None
+# Priority: medium
+# Description: Create a service to generate professional product images.
+# Details:
+This agent will take original product photos (or descriptions) and use an image generation AI (like DALL-E 3 or Midjourney via API) to create `imageCount` enhanced, professional lifestyle or feature-focused images.
+
+# Test Strategy:
+Test with various product types. Verify that the generated images are high-quality, relevant to the product, and align with marketing goals.

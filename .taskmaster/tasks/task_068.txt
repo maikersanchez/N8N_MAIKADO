@@ -1,0 +1,11 @@
+# Task ID: 68
+# Title: Frontend: Build Dashboard UI - Job Status View
+# Status: done
+# Dependencies: 53
+# Priority: medium
+# Description: Create the dashboard view to monitor all active and completed jobs.
+# Details:
+This view will fetch data from the job status API and display a table or list of jobs with their current status, creation date, and links to the final Shopify page and Google Drive folder.
+
+# Test Strategy:
+Verify that the view accurately reflects the job statuses from the database. Test that the page auto-updates or can be manually refreshed.

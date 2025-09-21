@@ -1,0 +1,11 @@
+# Task ID: 51
+# Title: Backend: Design Database Schema
+# Status: done
+# Dependencies: None
+# Priority: high
+# Description: Design and create the database schema for the control panel using PostgreSQL or MongoDB.
+# Details:
+The schema must include tables/collections for jobs (with status, input parameters, output URLs), analytics (conversion data, page views), and users. This forms the foundation for the entire management system.
+
+# Test Strategy:
+Review the schema against PRD requirements. Ensure all fields for job tracking and analytics are present. Use a migration tool to version the schema.

@@ -1,0 +1,11 @@
+# Task ID: 54
+# Title: n8n: Setup Main Orchestration Workflow
+# Status: done
+# Dependencies: 52
+# Priority: high
+# Description: Create the main n8n workflow that will manage the sequence of agent execution.
+# Details:
+This workflow will be triggered by the backend API. It will define the high-level flow: receive data, call Data Extractor, then Copywriter, etc., and handle data passing between steps. Initial setup can use mock nodes.
+
+# Test Strategy:
+Trigger the workflow with sample data and ensure it flows through the mock steps in the correct order. Verify data is passed correctly between nodes.

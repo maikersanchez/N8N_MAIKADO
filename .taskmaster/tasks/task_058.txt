@@ -1,0 +1,11 @@
+# Task ID: 58
+# Title: Agent: Develop Asset Generator Agent (Videos)
+# Status: done
+# Dependencies: 57
+# Priority: low
+# Description: Create a service to generate short promotional videos.
+# Details:
+This agent will use a video generation API to create `videoCount` short videos (e.g., 5-15 seconds) for the landing page, using the generated images and copy snippets.
+
+# Test Strategy:
+Verify that the service can generate videos and that they are in a web-compatible format. Check video quality and relevance.
