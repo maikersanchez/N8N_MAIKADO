@@ -1,12 +1,12 @@
 # ---- Source ----
-# This stage gets the full source code, including submodules
+# This stage clones the repository and its submodules
 FROM node:18-alpine AS source
+RUN apk add --no-cache git
 WORKDIR /app
-# Copy the entire repository context, which includes .gitmodules
-COPY . .
-# Install git and fetch the submodule content
-RUN apk add --no-cache git && \
-    git submodule update --init --recursive
+# Clone the main repository
+RUN git clone https://github.com/maikersanchez/N8N_MAIKADO.git .
+# Initialize and update submodules
+RUN git submodule update --init --recursive
 
 # ---- Base ----
 FROM node:18-alpine AS base
@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ---- Frontend Dependencies ----
 FROM base AS frontend-deps
 WORKDIR /app/next-maikado-app
-COPY --from=source /app/next-maikado-app/package.json /app/next-maikado-app/package-lock.json* .
+COPY --from=source /app/next-maikado-app/package.json /app/next-maikado-app/package-lock.json* ./
 RUN npm install
 
 # ---- Frontend Builder ----
