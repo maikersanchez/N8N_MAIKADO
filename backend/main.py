@@ -214,12 +214,17 @@ async def retry_job(job_id: str, background_tasks: BackgroundTasks):
     
     import json
     try:
+        # NocoDB might store the JSON payload as a string
         payload = json.loads(original_job.get("input_parameters", "{}"))
     except (json.JSONDecodeError, TypeError):
+        # Fallback if it's already an object or something else
         payload = original_job.get("input_parameters", {})
 
-    # create_job now requires background_tasks
-    return await create_job(payload, background_tasks)
+    # Re-trigger the n8n workflow for the EXISTING job
+    background_tasks.add_task(trigger_n8n_workflow, job_id, payload)
+    
+    print(f"Re-triggering n8n workflow for existing job {job_id}")
+    return {"message": "Request to re-trigger n8n workflow has been sent.", "job_id": job_id}
 
 if __name__ == "__main__":
     import uvicorn
