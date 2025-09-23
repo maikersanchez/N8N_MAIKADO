@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./next-maikado-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    container_name: maikado-frontend
+    restart: unless-stopped
+    env_file:
+      - ./.env
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    container_name: maikado-backend
+    restart: unless-stopped
+    env_file:
+      - ./.env
+
+  agents:
+    build:
+      context: ./agents
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    container_name: maikado-agents
+    restart: unless-stopped
+    env_file:
+      - ./.env
