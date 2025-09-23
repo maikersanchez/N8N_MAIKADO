@@ -96,9 +96,3 @@ async def generate_copy(input_data: CopywriterInput):
     except Exception as e:
         return {"error": f"Error calling Gemini API: {e}"}
 
-if __name__ == "__main__":
-    import uvicorn
-    # Example usage for local testing
-    # Ensure GOOGLE_API_KEY is set in your environment
-    # Run: uvicorn copywriter:app --reload --port 8002
-    uvicorn.run(app, host="0.0.0.0", port=8002)

@@ -67,9 +67,3 @@ async def generate_images(input_data: ImageGeneratorInput):
     except Exception as e:
         return {"error": f"Error calling Google Image API: {e}"}
 
-if __name__ == "__main__":
-    import uvicorn
-    # Example usage for local testing
-    # Ensure GOOGLE_API_KEY is set in your environment
-    # Run: uvicorn image_generator:app --reload --port 8003
-    uvicorn.run(app, host="0.0.0.0", port=8003)

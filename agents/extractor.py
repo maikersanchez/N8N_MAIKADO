@@ -53,9 +53,3 @@ def extract_product_info(url):
     except Exception as e:
         return json.dumps({"error": f"An error occurred: {e}"}, indent=2)
 
-if __name__ == '__main__':
-    # This allows the script to be run directly for testing
-    example_url = "https://www.alibaba.com/product-detail/2025-LED-Note-Board-with-Colors_1601407432104.html"
-    print("--- Testing Data Extractor Agent ---")
-    extracted_data_json = extract_product_info(example_url)
-    print(extracted_data_json)

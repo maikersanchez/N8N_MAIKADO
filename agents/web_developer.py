@@ -57,8 +57,3 @@ async def render_html(input_data: WebDeveloperInput):
 
     return {"html_content": rendered_html}
 
-if __name__ == "__main__":
-    import uvicorn
-    # Example usage for local testing
-    # Run: uvicorn web_developer:app --reload --port 8005
-    uvicorn.run(app, host="0.0.0.0", port=8005)

@@ -61,9 +61,3 @@ async def generate_videos(input_data: VideoGeneratorInput):
     except Exception as e:
         return {"error": f"Error calling Google Video API: {e}"}
 
-if __name__ == "__main__":
-    import uvicorn
-    # Example usage for local testing
-    # Ensure GOOGLE_API_KEY is set in your environment
-    # Run: uvicorn video_generator:app --reload --port 8008
-    uvicorn.run(app, host="0.0.0.0", port=8008)

@@ -107,9 +107,3 @@ async def generate_page_structure(input_data: ArchitectInput):
     except Exception as e:
         return {"error": f"Error calling Gemini API: {e}"}
 
-if __name__ == "__main__":
-    import uvicorn
-    # Example usage for local testing
-    # Ensure GOOGLE_API_KEY is set in your environment
-    # Run: uvicorn architect:app --reload --port 8004
-    uvicorn.run(app, host="0.0.0.0", port=8004)
