@@ -1,3 +1,4 @@
 [submodule "next-maikado-app"]
 	path = next-maikado-app
 	url = https://github.com/maikersanchez/next-maikado-app.git
+	branch = feat/nococodb-integration
