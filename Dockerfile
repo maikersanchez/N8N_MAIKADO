@@ -32,7 +32,8 @@ COPY --from=source /app/next-maikado-app/ .
 RUN npm run build
 
 # ---- Production ----
-FROM python:3.9-slim AS production
+FROM node:18-alpine AS production
+RUN apk add --no-cache python3 py3-pip
 WORKDIR /app
 
 # Copy backend
