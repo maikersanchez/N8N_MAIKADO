@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from typing import Dict, List, Any
 import uuid
 import datetime
@@ -7,6 +7,7 @@ from starlette.middleware.cors import CORSMiddleware
 import httpx
 import os
 from dotenv import load_dotenv
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 load_dotenv()
 
@@ -15,7 +16,7 @@ app = FastAPI()
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000"], # This should be updated for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +26,9 @@ app.add_middleware(
 NOCODB_API_URL = os.getenv("NOCODB_API_URL")
 NOCODB_API_TOKEN = os.getenv("NOCODB_API_TOKEN")
 NOCODB_TABLE_NAME = os.getenv("NOCODB_TABLE_NAME")
+
+# n8n Webhook Configuration
+N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL")
 
 def get_nocodb_headers():
     return {"xc-token": NOCODB_API_TOKEN}
@@ -38,19 +42,38 @@ class AnalyticsEvent(BaseModel):
     session_id: str
     metadata: Dict[str, Any] = {}
 
+@retry(stop=stop_after_attempt(3), wait=wait_fixed(2))
+async def trigger_n8n_workflow(job_id: str, payload: dict):
+    if not N8N_WEBHOOK_URL:
+        print("N8N_WEBHOOK_URL not configured. Skipping webhook trigger.")
+        return
+
+    print(f"Triggering n8n workflow for job {job_id}...")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                N8N_WEBHOOK_URL,
+                json={"job_id": job_id, "payload": payload},
+                timeout=10 # Add a timeout
+            )
+            response.raise_for_status() # Raise an exception for 4xx/5xx responses
+        print(f"Successfully triggered n8n workflow for job {job_id}.")
+    except httpx.RequestError as e:
+        print(f"An error occurred while triggering n8n workflow for job {job_id}: {e}")
+        raise # Reraise the exception to trigger tenacity's retry mechanism
+
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to WF Makiado Backend API!"}
 
 @app.post("/create-job")
-async def create_job(payload: dict):
+async def create_job(payload: dict, background_tasks: BackgroundTasks):
     job_id = str(uuid.uuid4())
-    current_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
     
     job_record = {
         "job_id": job_id,
         "status": "pending",
-        "input_parameters": payload,  # Store payload as a dict
+        "input_parameters": payload,
     }
 
     async with httpx.AsyncClient() as client:
@@ -65,8 +88,11 @@ async def create_job(payload: dict):
             print(f"Error creating job in NocoDB: {e.response.text}")
             raise HTTPException(status_code=500, detail="Failed to create job in database")
 
+    # Add the n8n webhook trigger as a background task
+    background_tasks.add_task(trigger_n8n_workflow, job_id, payload)
+
     print(f"Job created: {job_id} with payload: {payload}")
-    return {"message": "Job creation request received and recorded", "job_id": job_id, "status": "pending"}
+    return {"message": "Job creation request received, recorded, and n8n workflow triggered.", "job_id": job_id, "status": "pending"}
 
 @app.post("/jobs/{job_id}/status")
 async def update_job_status(job_id: str, new_status: str, shopify_url: str = None, gdrive_url: str = None, error_msg: str = None):
@@ -183,19 +209,17 @@ async def get_analytics_summary():
     return summary
 
 @app.post("/jobs/{job_id}/retry")
-async def retry_job(job_id: str):
+async def retry_job(job_id: str, background_tasks: BackgroundTasks):
     original_job = await get_job_details(job_id)
     
-    # The payload in NocoDB might be a string, so we might need to evaluate it
     import json
     try:
-        # Assuming input_parameters is stored as a JSON string
         payload = json.loads(original_job.get("input_parameters", "{}"))
     except (json.JSONDecodeError, TypeError):
-        # Fallback if it's not a valid JSON string
-        payload = {}
+        payload = original_job.get("input_parameters", {})
 
-    return await create_job(payload)
+    # create_job now requires background_tasks
+    return await create_job(payload, background_tasks)
 
 if __name__ == "__main__":
     import uvicorn
