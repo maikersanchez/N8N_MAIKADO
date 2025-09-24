@@ -1,10 +1,11 @@
-import requests
-from bs4 import BeautifulSoup
 import json
+import asyncio
+from playwright.async_api import async_playwright
 
-def extract_product_info(url):
+async def extract_product_info(url: str) -> str:
     """
-    Fetches a product page URL, parses its HTML content, and extracts key product information.
+    Fetches a product page URL using a headless browser (Playwright),
+    parses its content, and extracts key product information.
 
     Args:
         url (str): The URL of the product page to scrape.
@@ -13,86 +14,80 @@ def extract_product_info(url):
         str: A JSON string containing the extracted product data or an error message.
     """
     try:
-        # Use a common user-agent to avoid simple bot detection
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()  # Raise an exception for bad status codes (4xx or 5xx)
+        async with async_playwright() as p:
+            browser = await p.chromium.launch()
+            page = await browser.new_page()
+            await page.goto(url, wait_until="networkidle", timeout=20000)
 
-        soup = BeautifulSoup(response.content, 'html.parser')
+            # --- Product Title ---
+            try:
+                title_locator = page.locator('h1')
+                product_name = await title_locator.inner_text()
+            except Exception as e:
+                print(f"Could not extract title: {e}")
+                product_name = 'N/A'
 
-        # --- Product Title ---
-        try:
-            product_title_element = soup.find('h1') # Find the first h1 tag
-            product_name = product_title_element.text.strip() if product_title_element else 'N/A'
-        except Exception:
-            product_name = 'N/A'
+            # --- Product Description ---
+            try:
+                # This is a guess for a rich description/detail section
+                desc_locator = page.locator('div#product-detail')
+                raw_description = await desc_locator.inner_text()
+            except Exception as e:
+                print(f"Could not extract description: {e}")
+                raw_description = 'N/A'
 
-        # --- Product Description ---
-        try:
-            description_div = soup.find('div', id='product-detail') # This id is a more likely guess
-            raw_description = description_div.get_text(separator='\n').strip() if description_div else 'N/A'
-        except Exception:
-            raw_description = 'N/A'
+            # --- Product Price ---
+            try:
+                # This locator is a guess for Alibaba's complex price structure
+                price_locator = page.locator('[class*="price--original--"], [class*="price--promotion--"], [class*="price-text"]').first
+                price = await price_locator.inner_text()
+            except Exception as e:
+                print(f"Could not extract price: {e}")
+                price = 'N/A'
 
-        # --- Product Price ---
-        try:
-            # This is a guess. Alibaba's price structure is complex.
-            price_element = soup.find(lambda tag: (tag.name == 'span' or tag.name == 'div') and 'price' in ''.join(tag.get('class', [])))
-            price = price_element.text.strip() if price_element else 'N/A'
-        except Exception:
-            price = 'N/A'
+            # --- Product Image URLs ---
+            try:
+                image_urls = []
+                # This locator is a guess for the main image gallery
+                image_locators = page.locator('div[class*="gallery-main"] img, div[class*="image-viewer"] img')
+                for i in range(await image_locators.count()):
+                    src = await image_locators.nth(i).get_attribute('src')
+                    if src:
+                        image_urls.append(src)
+            except Exception as e:
+                print(f"Could not extract images: {e}")
+                image_urls = []
 
-        # --- Product Image URLs ---
-        try:
-            image_urls = []
-            # This is a guess. Find a gallery container and get all images within it.
-            gallery_container = soup.find('div', class_=lambda x: x and 'gallery' in x)
-            if gallery_container:
-                image_elements = gallery_container.find_all('img')
-                for img in image_elements:
-                    if img.get('src'):
-                        image_urls.append(img.get('src'))
-            # Fallback if the main gallery isn't found
-            if not image_urls:
-                main_image = soup.find('img', class_=lambda x: x and 'main' in x)
-                if main_image and main_image.get('src'):
-                    image_urls.append(main_image.get('src'))
-        except Exception:
-            image_urls = []
-
-        # --- Product Specifications ---
-        try:
-            specifications = {}
-            # This is a guess. Find a container for specs, e.g., a div with id="product-specs"
-            specs_container = soup.find('div', id=lambda x: x and 'spec' in x.lower())
-            if specs_container:
-                # Assuming specs are in a table
-                table_rows = specs_container.find_all('tr')
-                for row in table_rows:
-                    cells = row.find_all('td')
-                    if len(cells) == 2:
-                        key = cells[0].text.strip()
-                        value = cells[1].text.strip()
+            # --- Product Specifications ---
+            try:
+                specifications = {}
+                # This locator is a guess for a specifications table
+                spec_rows = page.locator('div[id*="spec"] tr')
+                for i in range(await spec_rows.count()):
+                    key_locator = spec_rows.nth(i).locator('td').nth(0)
+                    value_locator = spec_rows.nth(i).locator('td').nth(1)
+                    if await key_locator.count() > 0 and await value_locator.count() > 0:
+                        key = await key_locator.inner_text()
+                        value = await value_locator.inner_text()
                         if key and value:
-                            specifications[key] = value
-        except Exception:
-            specifications = {}
+                            specifications[key.strip()] = value.strip()
+            except Exception as e:
+                print(f"Could not extract specifications: {e}")
+                specifications = {}
 
-        product_data = {
-            'product_url': url,
-            'product_name': product_name,
-            'raw_description': raw_description,
-            'price': price,
-            'image_urls': image_urls,
-            'specifications': specifications,
-        }
+            await browser.close()
 
-        return json.dumps(product_data, indent=2)
+            product_data = {
+                'product_url': url,
+                'product_name': product_name.strip(),
+                'raw_description': raw_description.strip(),
+                'price': price.strip(),
+                'image_urls': image_urls,
+                'specifications': specifications,
+            }
 
-    except requests.exceptions.RequestException as e:
-        return json.dumps({"error": f"HTTP Request failed: {e}"}, indent=2)
+            return json.dumps(product_data, indent=2)
+
     except Exception as e:
-        return json.dumps({"error": f"An error occurred: {e}"}, indent=2)
+        return json.dumps({"error": f"An error occurred with Playwright: {e}"}, indent=2)
 

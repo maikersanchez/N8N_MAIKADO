@@ -22,7 +22,7 @@ async def run_extractor(url: Annotated[str, Body(embed=True)]):
     Endpoint to run the product information extractor.
     Accepts a URL and returns the scraped data.
     """
-    return extract_product_info(url)
+    return await extract_product_info(url)
 
 # --- Mount other agents ---
 # Mount each agent's FastAPI app as a sub-application
