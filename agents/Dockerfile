@@ -6,8 +6,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Playwright browsers and dependencies
-RUN playwright install --with-deps
+# Update package lists and then install Playwright browsers and dependencies
+RUN apt-get update && playwright install --with-deps
 
 # Copy all agent source code
 COPY . .
