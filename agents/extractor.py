@@ -11,7 +11,7 @@ async def list_available_gemini_models() -> str:
     """Lists available Gemini models for debugging purposes."""
     try:
         print("Attempting to list available Gemini models...")
-        models = await genai.list_models()
+        models = genai.list_models()
         available_models = []
         for m in models:
             available_models.append({
