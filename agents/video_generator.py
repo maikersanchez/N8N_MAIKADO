@@ -30,7 +30,7 @@ class GeneratedVideo(BaseModel):
     base64_data: str = None # Base64 encoded video data
     description: str = None # Description of the generated video
 
-@app.post("/generate-videos")
+@app.post("/")
 async def generate_videos(input_data: VideoGeneratorInput):
     # --- Prompt Engineering for Video Generation ---
     # This is a placeholder. The actual prompt will be more sophisticated.

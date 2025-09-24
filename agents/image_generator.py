@@ -31,7 +31,7 @@ class GeneratedImage(BaseModel):
     base64_data: str = None # Base64 encoded image data
     description: str = None # Description of the generated image
 
-@app.post("/generate-images")
+@app.post("/")
 async def generate_images(input_data: ImageGeneratorInput):
     # --- Prompt Engineering for Image Generation ---
     # This is a placeholder. The actual prompt will be more sophisticated.

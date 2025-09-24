@@ -28,7 +28,7 @@ def extract_product_info(url):
         # This process is often iterative and requires analyzing the page's HTML.
 
         # Example for product title
-        product_title_element = soup.find('h1', class_='product-title') # This class is an example
+        product_title_element = soup.find('h1') # Find the first h1 tag
         product_name = product_title_element.text.strip() if product_title_element else 'N/A'
 
         # Example for description (this might be more complex)

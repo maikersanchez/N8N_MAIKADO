@@ -13,7 +13,7 @@ class WebDeveloperInput(BaseModel):
     images: List[Dict[str, str]] # URLs/data from Image Generator Agent
     videos: List[Dict[str, str]] = [] # URLs/data from Video Generator Agent (if implemented)
 
-@app.post("/render")
+@app.post("/")
 async def render_html(input_data: WebDeveloperInput):
     # --- HTML Rendering Logic ---
     # This is the core of the Web Developer Agent.

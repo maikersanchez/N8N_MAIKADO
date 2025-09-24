@@ -22,7 +22,7 @@ class CopywriterInput(BaseModel):
     language: str = "es" # Default language
     currency: str = "USD" # Default currency
 
-@app.post("/copywrite")
+@app.post("/")
 async def generate_copy(input_data: CopywriterInput):
     # --- Prompt Engineering for UGC Video Script ---
     prompt = f"""

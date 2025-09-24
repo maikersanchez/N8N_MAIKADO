@@ -23,7 +23,7 @@ class ArchitectInput(BaseModel):
     content_data: ContentData
     language: str = "es" # Default language
 
-@app.post("/architect")
+@app.post("/")
 async def generate_page_structure(input_data: ArchitectInput):
     # --- Prompt Engineering for Page Structure ---
     # This prompt guides the LLM to create a JSON structure based on the A/B fold principles.
