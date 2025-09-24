@@ -38,7 +38,7 @@ async def extract_product_info(url: str) -> str:
         print("HTML content fetched successfully. Sending to AI for analysis...")
 
         # Dynamically create a model instance within the async function
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.0-pro')
 
         # The prompt for the AI model
         prompt = f"""

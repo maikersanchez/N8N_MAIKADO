@@ -10,7 +10,7 @@ app = FastAPI()
 
 # Configure Google Generative AI (ensure GOOGLE_API_KEY is set in environment)
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-pro') # Using gemini-pro for text generation
+model = genai.GenerativeModel('gemini-1.0-pro') # Using gemini-pro for text generation
 
 class ContentData(BaseModel):
     copy: Dict[str, str] # Output from Copywriter Agent
