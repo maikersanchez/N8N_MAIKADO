@@ -29,8 +29,9 @@ async def extract_product_info(url: str) -> str:
 
             # --- Product Description ---
             try:
-                # This is a guess for a rich description/detail section
-                desc_locator = page.locator('div#product-detail')
+                desc_selector = 'div#detail_decorate_root'
+                await page.wait_for_selector(desc_selector, timeout=10000)
+                desc_locator = page.locator(desc_selector)
                 raw_description = await desc_locator.inner_text()
             except Exception as e:
                 print(f"Could not extract description: {e}")
@@ -38,22 +39,54 @@ async def extract_product_info(url: str) -> str:
 
             # --- Product Price ---
             try:
-                # This locator is a guess for Alibaba's complex price structure
-                price_locator = page.locator('[class*="price--original--"], [class*="price--promotion--"], [class*="price-text"]').first
-                price = await price_locator.inner_text()
+                price_data = []
+                # Wait for the main price container to be visible
+                price_container_selector = '[data-testid="product-price"]'
+                await page.wait_for_selector(price_container_selector, timeout=10000)
+                
+                # Find all price items within the container
+                price_items = page.locator(f'{price_container_selector} .price-item')
+                
+                for i in range(await price_items.count()):
+                    item = price_items.nth(i)
+                    # Locators are based on the HTML snippet provided
+                    quantity_locator = item.locator('div.id-text-sm')
+                    price_value_locator = item.locator('span')
+                    
+                    quantity = await quantity_locator.inner_text()
+                    price_value = await price_value_locator.inner_text()
+                    
+                    price_data.append({
+                        "quantity": quantity.strip(),
+                        "price": price_value.strip()
+                    })
+                price = price_data
             except Exception as e:
-                print(f"Could not extract price: {e}")
-                price = 'N/A'
+                print(f"Could not extract structured price: {e}")
+                # Fallback to old method just in case
+                try:
+                    price_locator = page.locator('[class*="price--original--"], [class*="price--promotion--"], [class*="price-text"]').first
+                    price = await price_locator.inner_text()
+                except Exception:
+                    price = []
 
             # --- Product Image URLs ---
             try:
                 image_urls = []
-                # This locator is a guess for the main image gallery
-                image_locators = page.locator('div[class*="gallery-main"] img, div[class*="image-viewer"] img')
+                # Use the same container as the description which contains all rich content
+                main_content_selector = 'div#detail_decorate_root'
+                await page.wait_for_selector(main_content_selector, timeout=10000)
+                
+                image_locators = page.locator(f'{main_content_selector} img')
+                
                 for i in range(await image_locators.count()):
                     src = await image_locators.nth(i).get_attribute('src')
                     if src:
-                        image_urls.append(src)
+                        # Ensure URL is absolute by prepending https: if it starts with //
+                        if src.startswith('//'):
+                            image_urls.append(f'https:{src}')
+                        else:
+                            image_urls.append(src)
             except Exception as e:
                 print(f"Could not extract images: {e}")
                 image_urls = []
@@ -61,16 +94,28 @@ async def extract_product_info(url: str) -> str:
             # --- Product Specifications ---
             try:
                 specifications = {}
-                # This locator is a guess for a specifications table
-                spec_rows = page.locator('div[id*="spec"] tr')
-                for i in range(await spec_rows.count()):
-                    key_locator = spec_rows.nth(i).locator('td').nth(0)
-                    value_locator = spec_rows.nth(i).locator('td').nth(1)
-                    if await key_locator.count() > 0 and await value_locator.count() > 0:
-                        key = await key_locator.inner_text()
-                        value = await value_locator.inner_text()
-                        if key and value:
-                            specifications[key.strip()] = value.strip()
+                # Wait for the attributes container to be visible
+                specs_container_selector = '[data-testid="module-attribute"]'
+                await page.wait_for_selector(specs_container_selector, timeout=10000)
+                
+                # The container for the grid of attributes
+                grid_container = page.locator(f'{specs_container_selector} .id-grid.id-grid-cols-2').first
+                
+                # Each attribute is a div that is a direct child of the grid
+                attribute_rows = grid_container.locator('> div')
+
+                for i in range(await attribute_rows.count()):
+                    row = attribute_rows.nth(i)
+                    # The key and value are the two divs inside the row
+                    # We take the `title` attribute as it contains the full, untruncated text
+                    key_element = row.locator('div').nth(0)
+                    value_element = row.locator('div').nth(1)
+
+                    key = await key_element.get_attribute('title')
+                    value = await value_element.get_attribute('title')
+
+                    if key and value:
+                        specifications[key.strip()] = value.strip()
             except Exception as e:
                 print(f"Could not extract specifications: {e}")
                 specifications = {}
