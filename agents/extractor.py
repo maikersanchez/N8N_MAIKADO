@@ -126,7 +126,7 @@ async def extract_product_info(url: str) -> str:
                 'product_url': url,
                 'product_name': product_name.strip(),
                 'raw_description': raw_description.strip(),
-                'price': price.strip(),
+                'price': price,
                 'image_urls': image_urls,
                 'specifications': specifications,
             }
