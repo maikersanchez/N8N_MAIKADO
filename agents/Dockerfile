@@ -23,6 +23,7 @@ RUN apt-get update \
        libpango-1.0-0 \
        libcairo2 \
        libasound2 \
+       libxkbcommon0 \
     # Install browsers without the --with-deps flag
     && playwright install \
     # Clean up apt cache
