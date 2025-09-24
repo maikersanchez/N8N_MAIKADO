@@ -17,7 +17,7 @@ async def extract_product_info(url: str) -> str:
         async with async_playwright() as p:
             browser = await p.chromium.launch()
             page = await browser.new_page()
-            await page.goto(url, wait_until="networkidle", timeout=20000)
+            await page.goto(url, wait_until="domcontentloaded", timeout=20000)
 
             # --- Product Title ---
             try:
