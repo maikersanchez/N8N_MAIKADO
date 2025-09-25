@@ -9,7 +9,7 @@ app = FastAPI()
 
 # Configure Google Generative AI (ensure GOOGLE_API_KEY is set in environment)
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('veo-3.0-generate-001') # Placeholder for video generation model
+model = genai.GenerativeModel('veo-2.0-generate-001') # Placeholder for video generation model
 
 class UGCScene(BaseModel):
     scene: int
