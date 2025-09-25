@@ -14,7 +14,7 @@ genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 # Note: The exact model ID for image generation might vary or require specific API calls.
 # For simplicity, we'll use a placeholder that assumes a generative model.
 # A more robust implementation might use specific image generation APIs if available.
-model = genai.GenerativeModel('gemini-pro-vision') # Placeholder for image generation model
+model = genai.GenerativeModel('gemini-2.5-flash-image-preview') # Placeholder for image generation model
 
 class ProductData(BaseModel):
     product_name: str

@@ -9,7 +9,7 @@ app = FastAPI()
 
 # Configure Google Generative AI (ensure GOOGLE_API_KEY is set in environment)
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('models/gemini-2.5-pro') # Using gemini-pro for text generation
+model = genai.GenerativeModel('models/gemini-2.5-pro-preview-06-05') # Using gemini-pro for text generation
 
 class ProductData(BaseModel):
     product_name: str
