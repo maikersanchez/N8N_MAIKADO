@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-import google.generativeai as genai
+import google as genai
 import os
 import base64 # For handling image data if needed
 from typing import List
@@ -9,12 +9,13 @@ from typing import List
 app = FastAPI()
 
 # Configure Google Generative AI (ensure GOOGLE_API_KEY is set in environment)
-genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+#genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 # Using a model capable of image generation (e.g., Gemini Pro Vision or a dedicated image model)
 # Note: The exact model ID for image generation might vary or require specific API calls.
 # For simplicity, we'll use a placeholder that assumes a generative model.
 # A more robust implementation might use specific image generation APIs if available.
-model = genai.GenerativeModel('gemini-2.5-flash-image-preview') # Placeholder for image generation model
+client = genai.Client()
+#model = genai.GenerativeModel('gemini-2.5-flash-image-preview') # Placeholder for image generation model
 
 class ProductData(BaseModel):
     product_name: str
@@ -50,7 +51,10 @@ async def generate_images(input_data: ImageGeneratorInput):
         # specific API calls for image models, not just text generation.
         # For Gemini Pro Vision, you'd typically pass text and existing images.
         # Here, we're simulating generating images based on text prompt.
-        response = model.generate_content(prompt_text)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash-image-preview",
+            contents=[prompt_text],
+        )
 
         # Assuming the response contains URLs or base64 data for generated images
         # This part would need to be adapted based on the actual API response format.
