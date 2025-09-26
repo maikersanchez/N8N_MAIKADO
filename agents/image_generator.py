@@ -8,6 +8,7 @@ from minio import Minio
 from minio.error import S3Error
 import io
 import datetime
+from urllib.parse import urlparse
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -17,19 +18,23 @@ genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 model = genai.GenerativeModel('gemini-pro-vision') # Placeholder for image generation model
 
 # MinIO Configuration
-MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT")
+MINIO_ENDPOINT_URL = os.environ.get("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY")
 MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY")
 MINIO_BUCKET = os.environ.get("MINIO_BUCKET")
 MINIO_USE_SSL = os.environ.get("MINIO_USE_SSL", "true").lower() == "true"
 
-# Initialize MinIO client
-minio_client = Minio(
-    MINIO_ENDPOINT,
-    access_key=MINIO_ACCESS_KEY,
-    secret_key=MINIO_SECRET_KEY,
-    secure=MINIO_USE_SSL
-)
+minio_client = None
+if MINIO_ENDPOINT_URL:
+    parsed_url = urlparse(MINIO_ENDPOINT_URL)
+    minio_endpoint = parsed_url.netloc or parsed_url.path
+    # Initialize MinIO client
+    minio_client = Minio(
+        minio_endpoint,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+        secure=MINIO_USE_SSL
+    )
 
 class ProductData(BaseModel):
     product_name: str
@@ -62,7 +67,7 @@ async def generate_images(input_data: ImageGeneratorInput):
         
         # Assuming response.parts contains image data
         # This is a placeholder and needs to be adapted to the actual model response
-        if hasattr(response, 'parts'):
+        if hasattr(response, 'parts') and minio_client:
             for i, part in enumerate(response.parts):
                 if part.mime_type.startswith("image/"):
                     image_data = part.data
@@ -85,7 +90,7 @@ async def generate_images(input_data: ImageGeneratorInput):
                         )
                         
                         # Construct the public URL
-                        image_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT}/{MINIO_BUCKET}/{object_name}"
+                        image_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT_URL}/{MINIO_BUCKET}/{object_name}"
                         
                         generated_images_list.append(GeneratedImage(
                             url=image_url,
@@ -100,7 +105,7 @@ async def generate_images(input_data: ImageGeneratorInput):
                         ))
         
         if not generated_images_list:
-             # Placeholder if no images are generated from the model
+             # Placeholder if no images are generated from the model or MinIO is not configured
             for i in range(input_data.image_count):
                 generated_images_list.append(GeneratedImage(
                     url=f"http://placeholder.com/image_{i+1}.jpg",

@@ -7,6 +7,7 @@ from minio import Minio
 from minio.error import S3Error
 import io
 import datetime
+from urllib.parse import urlparse
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -16,19 +17,23 @@ genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 model = genai.GenerativeModel('veo-2.0-generate-001') # Placeholder for video generation model
 
 # MinIO Configuration
-MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT")
+MINIO_ENDPOINT_URL = os.environ.get("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY")
 MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY")
 MINIO_BUCKET = os.environ.get("MINIO_BUCKET")
 MINIO_USE_SSL = os.environ.get("MINIO_USE_SSL", "true").lower() == "true"
 
-# Initialize MinIO client
-minio_client = Minio(
-    MINIO_ENDPOINT,
-    access_key=MINIO_ACCESS_KEY,
-    secret_key=MINIO_SECRET_KEY,
-    secure=MINIO_USE_SSL
-)
+minio_client = None
+if MINIO_ENDPOINT_URL:
+    parsed_url = urlparse(MINIO_ENDPOINT_URL)
+    minio_endpoint = parsed_url.netloc or parsed_url.path
+    # Initialize MinIO client
+    minio_client = Minio(
+        minio_endpoint,
+        access_key=MINIO_ACCESS_KEY,
+        secret_key=MINIO_SECRET_KEY,
+        secure=MINIO_USE_SSL
+    )
 
 class UGCScene(BaseModel):
     scene: int
@@ -64,7 +69,7 @@ async def generate_videos(input_data: VideoGeneratorInput):
 
         generated_videos_list: List[GeneratedVideo] = []
 
-        if hasattr(response, 'parts'):
+        if hasattr(response, 'parts') and minio_client:
             for i, part in enumerate(response.parts):
                 if part.mime_type.startswith("video/"):
                     video_data = part.data
@@ -83,7 +88,7 @@ async def generate_videos(input_data: VideoGeneratorInput):
                             content_type='video/mp4'
                         )
                         
-                        video_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT}/{MINIO_BUCKET}/{object_name}"
+                        video_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT_URL}/{MINIO_BUCKET}/{object_name}"
                         
                         generated_videos_list.append(GeneratedVideo(
                             url=video_url,

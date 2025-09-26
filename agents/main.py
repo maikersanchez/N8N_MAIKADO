@@ -1,5 +1,9 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Response
 from typing import Annotated
+from minio import Minio
+from minio.error import S3Error
+import os
+from urllib.parse import urlparse
 
 # Import the app object from each agent module
 from architect import app as architect_app
@@ -23,6 +27,46 @@ async def run_extractor(url: Annotated[str, Body(embed=True)]):
     Accepts a URL and returns the scraped data.
     """
     return await extract_product_info(url)
+
+# --- MinIO Health Check Endpoint ---
+@app.get("/health/minio")
+async def minio_health_check(response: Response):
+    """
+    Checks the connection to MinIO and returns the status.
+    """
+    try:
+        # MinIO Configuration
+        MINIO_ENDPOINT_URL = os.environ.get("MINIO_ENDPOINT")
+        MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY")
+        MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY")
+        MINIO_USE_SSL = os.environ.get("MINIO_USE_SSL", "true").lower() == "true"
+
+        if not all([MINIO_ENDPOINT_URL, MINIO_ACCESS_KEY, MINIO_SECRET_KEY]):
+            response.status_code = 500
+            return {"status": "error", "error": "MinIO environment variables are not set."}
+
+        # Parse the endpoint to remove any path
+        parsed_url = urlparse(MINIO_ENDPOINT_URL)
+        minio_endpoint = parsed_url.netloc or parsed_url.path # Handles cases with or without scheme
+
+        minio_client = Minio(
+            minio_endpoint,
+            access_key=MINIO_ACCESS_KEY,
+            secret_key=MINIO_SECRET_KEY,
+            secure=MINIO_USE_SSL
+        )
+
+        # Check if the client can list buckets
+        minio_client.list_buckets()
+
+        return {"status": "ok", "message": "MinIO connection is successful."}
+    except S3Error as e:
+        response.status_code = 500
+        return {"status": "error", "error": f"MinIO S3 Error: {e}"}
+    except Exception as e:
+        response.status_code = 500
+        return {"status": "error", "error": f"An unexpected error occurred: {e}"}
+
 
 # --- Mount other agents ---
 # Mount each agent's FastAPI app as a sub-application
