@@ -1,42 +1,50 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-import google as genai
+import google.generativeai as genai
 import os
-import base64 # For handling image data if needed
+import base64
 from typing import List
+from minio import Minio
+from minio.error import S3Error
+import io
+import datetime
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Configure Google Generative AI (ensure GOOGLE_API_KEY is set in environment)
-#genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-# Using a model capable of image generation (e.g., Gemini Pro Vision or a dedicated image model)
-# Note: The exact model ID for image generation might vary or require specific API calls.
-# For simplicity, we'll use a placeholder that assumes a generative model.
-# A more robust implementation might use specific image generation APIs if available.
-client = genai.Client()
-#model = genai.GenerativeModel('gemini-2.5-flash-image-preview') # Placeholder for image generation model
+# Configure Google Generative AI
+genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
+model = genai.GenerativeModel('gemini-pro-vision') # Placeholder for image generation model
+
+# MinIO Configuration
+MINIO_ENDPOINT = os.environ.get("MINIO_ENDPOINT")
+MINIO_ACCESS_KEY = os.environ.get("MINIO_ACCESS_KEY")
+MINIO_SECRET_KEY = os.environ.get("MINIO_SECRET_KEY")
+MINIO_BUCKET = os.environ.get("MINIO_BUCKET")
+MINIO_USE_SSL = os.environ.get("MINIO_USE_SSL", "true").lower() == "true"
+
+# Initialize MinIO client
+minio_client = Minio(
+    MINIO_ENDPOINT,
+    access_key=MINIO_ACCESS_KEY,
+    secret_key=MINIO_SECRET_KEY,
+    secure=MINIO_USE_SSL
+)
 
 class ProductData(BaseModel):
     product_name: str
     raw_description: str
-    # Add other fields as needed from extractor agent output
 
 class ImageGeneratorInput(BaseModel):
     product_data: ProductData
-    image_count: int = 1 # Number of images to generate
-    # Optional: reference_image_url: str = None # URL of an existing image to enhance
+    image_count: int = 1
 
 class GeneratedImage(BaseModel):
-    url: str = None # URL if image is hosted
-    base64_data: str = None # Base64 encoded image data
-    description: str = None # Description of the generated image
+    url: str = None
+    description: str = None
 
 @app.post("/")
 async def generate_images(input_data: ImageGeneratorInput):
-    # --- Prompt Engineering for Image Generation ---
-    # This is a placeholder. The actual prompt will be more sophisticated.
-    # It should guide the AI on what kind of image to create (e.g., lifestyle, feature-focused).
     prompt_text = f"""
     Generate {input_data.image_count} professional, high-quality product images for:
     Product Name: {input_data.product_data.product_name}
@@ -47,27 +55,59 @@ async def generate_images(input_data: ImageGeneratorInput):
     """
 
     try:
-        # This is a simplified representation. Actual image generation might involve
-        # specific API calls for image models, not just text generation.
-        # For Gemini Pro Vision, you'd typically pass text and existing images.
-        # Here, we're simulating generating images based on text prompt.
-        response = client.models.generate_content(
-            model="gemini-2.5-flash-image-preview",
-            contents=[prompt_text],
-        )
+        # This is a simplified representation.
+        response = model.generate_content(prompt_text)
 
-        # Assuming the response contains URLs or base64 data for generated images
-        # This part would need to be adapted based on the actual API response format.
         generated_images_list: List[GeneratedImage] = []
-        for i in range(input_data.image_count):
-            # Placeholder: In a real scenario, you'd parse the actual image URLs/data from response
-            generated_images_list.append(GeneratedImage(
-                url=f"http://placeholder.com/image_{i+1}.jpg",
-                description=f"Generated image {i+1} for {input_data.product_data.product_name}"
-            ))
+        
+        # Assuming response.parts contains image data
+        # This is a placeholder and needs to be adapted to the actual model response
+        if hasattr(response, 'parts'):
+            for i, part in enumerate(response.parts):
+                if part.mime_type.startswith("image/"):
+                    image_data = part.data
+                    
+                    # Create a unique filename
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                    filename = f"image_{i+1}_{timestamp}.png"
+                    
+                    # Define the object name in MinIO
+                    object_name = f"{input_data.product_data.product_name}/{filename}"
+                    
+                    # Upload the image to MinIO
+                    try:
+                        minio_client.put_object(
+                            MINIO_BUCKET,
+                            object_name,
+                            io.BytesIO(image_data),
+                            len(image_data),
+                            content_type='image/png'
+                        )
+                        
+                        # Construct the public URL
+                        image_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT}/{MINIO_BUCKET}/{object_name}"
+                        
+                        generated_images_list.append(GeneratedImage(
+                            url=image_url,
+                            description=f"Generated image {i+1} for {input_data.product_data.product_name}"
+                        ))
+                    except S3Error as exc:
+                        print(f"Error uploading to MinIO: {exc}")
+                        # Fallback to placeholder if upload fails
+                        generated_images_list.append(GeneratedImage(
+                            url=f"http://placeholder.com/error_upload.jpg",
+                            description=f"Failed to upload image {i+1} for {input_data.product_data.product_name}"
+                        ))
+        
+        if not generated_images_list:
+             # Placeholder if no images are generated from the model
+            for i in range(input_data.image_count):
+                generated_images_list.append(GeneratedImage(
+                    url=f"http://placeholder.com/image_{i+1}.jpg",
+                    description=f"Generated image {i+1} for {input_data.product_data.product_name}"
+                ))
 
         return generated_images_list
 
     except Exception as e:
         return {"error": f"Error calling Google Image API: {e}"}
-
