@@ -15,7 +15,7 @@ app = FastAPI()
 
 # Configure Google Generative AI
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-flash-image-preview') # Placeholder for image generation model
+model = genai.GenerativeModel('imagen-4.0-generate-001') # Placeholder for image generation model
 
 # MinIO Configuration
 MINIO_ENDPOINT_URL = os.environ.get("MINIO_ENDPOINT")
