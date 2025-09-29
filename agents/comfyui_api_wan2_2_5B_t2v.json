@@ -1,7 +1,9 @@
 {
+  "client_id": "n8n",
+  "prompt": {
   "3": {
     "inputs": {
-      "seed": 418826476045691,
+      "seed": 1046426467,
       "steps": 20,
       "cfg": 5,
       "sampler_name": "uni_pc",
@@ -159,4 +161,5 @@
       "title": "Save Video"
     }
   }
+}
 }
