@@ -12,6 +12,7 @@ httpx
 idna==3.10
 marshmallow==4.0.1
 minio
+Pillow
 pydantic==2.11.7
 pydantic_core==2.33.2
 python-dotenv==1.1.1
