@@ -62,20 +62,42 @@ async def generate_videos(input_data: VideoGeneratorInput):
 
     # Load the ComfyUI workflow from a file
     try:
-        with open("comfyui_workflow.json", "r") as f:
+        with open("agents/comfyui_api_wan2_2_5B_t2v.json", "r") as f:
             workflow = json.load(f)
     except FileNotFoundError:
-        return {"error": "comfyui_workflow.json not found. Please provide the workflow file."}
+        return {"error": "comfyui_api_wan2_2_5B_t2v.json not found. Please provide the workflow file in the agents directory."}
 
-    # TODO: Modify the workflow with the input data (e.g., prompts)
-    # This part is highly dependent on the structure of your ComfyUI workflow.
-    # For example, you might need to find a specific node and update its "text" field.
-    # workflow["6"]["inputs"]["text"] = input_data.script_data.title
+    # Construct the prompt from all scenes
+    prompt_parts = []
+    for scene in input_data.script_data.ugc_video_script:
+        prompt_parts.append(f"Scene {scene.scene}: {scene.visuals}. Dialogue: {scene.dialogue}")
+    full_prompt = " ".join(prompt_parts)
+
+    # Modify the workflow with the new prompt
+    workflow["6"]["inputs"]["text"] = full_prompt
 
     generated_videos_list: List[GeneratedVideo] = []
 
     for i in range(input_data.video_count):
         try:
+            # Store the request JSON in MinIO
+            if minio_client:
+                timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+                request_filename = f"request_{i+1}_{timestamp}.json"
+                request_object_name = f"{input_data.script_data.title}/{request_filename}"
+                request_data = json.dumps(workflow, indent=2).encode('utf-8')
+                
+                try:
+                    minio_client.put_object(
+                        MINIO_BUCKET,
+                        request_object_name,
+                        io.BytesIO(request_data),
+                        len(request_data),
+                        content_type='application/json'
+                    )
+                except S3Error as exc:
+                    print(f"Error uploading request to MinIO: {exc}")
+
             # Call the ComfyUI Modal endpoint
             async with httpx.AsyncClient(timeout=None) as client:
                 response = await client.post(COMFYUI_MODAL_ENDPOINT, json=workflow)
@@ -83,32 +105,32 @@ async def generate_videos(input_data: VideoGeneratorInput):
                 video_data = response.content
 
             if minio_client:
-                # Create a unique filename
+                # Create a unique filename for the video
                 timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-                filename = f"video_{i+1}_{timestamp}.mp4"
+                video_filename = f"video_{i+1}_{timestamp}.mp4"
                 
                 # Define the object name in MinIO
-                object_name = f"{input_data.script_data.title}/{filename}"
+                video_object_name = f"{input_data.script_data.title}/{video_filename}"
                 
                 # Upload the video to MinIO
                 try:
                     minio_client.put_object(
                         MINIO_BUCKET,
-                        object_name,
+                        video_object_name,
                         io.BytesIO(video_data),
                         len(video_data),
                         content_type='video/mp4'
                     )
                     
                     # Construct the public URL
-                    video_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT_URL}/{MINIO_BUCKET}/{object_name}"
+                    video_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT_URL}/{MINIO_BUCKET}/{video_object_name}"
                     
                     generated_videos_list.append(GeneratedVideo(
                         url=video_url,
                         description=f"Generated video {i+1} for {input_data.script_data.title}"
                     ))
                 except S3Error as exc:
-                    print(f"Error uploading to MinIO: {exc}")
+                    print(f"Error uploading video to MinIO: {exc}")
                     generated_videos_list.append(GeneratedVideo(
                         url=f"http://placeholder.com/error_upload.mp4",
                         description=f"Failed to upload video {i+1} for {input_data.script_data.title}"
