@@ -13,7 +13,7 @@ genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 model = genai.GenerativeModel('models/gemini-2.5-pro') # Using gemini-2.5-pro for text generation
 
 class ContentData(BaseModel):
-    copy: Dict[str, str] # Output from Copywriter Agent
+    content_copy: Dict[str, str] # Output from Copywriter Agent
     images: List[Dict[str, str]] # Output from Image Generator Agent
     videos: List[Dict[str, str]] = [] # Output from Video Generator Agent (if implemented)
 

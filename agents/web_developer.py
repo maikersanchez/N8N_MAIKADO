@@ -35,14 +35,14 @@ async def render_html(input_data: WebDeveloperInput):
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Generated Page for {input_data.copy.get('headline', 'Product')}</title>
+        <title>Generated Page for {input_data.content_copy.get('headline', 'Product')}</title>
         <!-- Tailwind CSS will be compiled and linked here -->
         <link href="/styles.css" rel="stylesheet">
     </head>
     <body>
         <div id="root">
-            <h1>{input_data.copy.get('headline', 'Default Headline')}</h1>
-            <p>{input_data.copy.get('subheadline', 'Default Subheadline')}</p>
+            <h1>{input_data.content_copy.get('headline', 'Default Headline')}</h1>
+            <p>{input_data.content_copy.get('subheadline', 'Default Subheadline')}</p>
             <!-- Example of rendering an image -->
             {f'<img src="{input_data.images[0].get("url")}" alt="{input_data.images[0].get("description")}" />' if input_data.images else ''}
             <p>Page structure received: {json.dumps(input_data.page_structure, indent=2)}</p>
