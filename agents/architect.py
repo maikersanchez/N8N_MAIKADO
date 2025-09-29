@@ -38,7 +38,7 @@ async def generate_page_structure(input_data: ArchitectInput):
     Idioma: {input_data.language}
 
     Contenido disponible:
-    Texto (Copywriter Agent): {json.dumps(input_data.content_data.copy, indent=2)}
+    Texto (Copywriter Agent): {json.dumps(input_data.content_data.content_copy, indent=2)}
     Imágenes (Image Generator Agent): {json.dumps(input_data.content_data.images, indent=2)}
     Videos (Video Generator Agent): {json.dumps(input_data.content_data.videos, indent=2)}
 

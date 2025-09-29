@@ -60,12 +60,16 @@ async def generate_videos(input_data: VideoGeneratorInput):
     if not COMFYUI_MODAL_ENDPOINT:
         return {"error": "COMFYUI_MODAL_ENDPOINT environment variable is not set."}
 
+    # Construct the absolute path to the workflow file
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    workflow_path = os.path.join(script_dir, "comfyui_api_wan2_2_5B_t2v.json")
+
     # Load the ComfyUI workflow from a file
     try:
-        with open("agents/comfyui_api_wan2_2_5B_t2v.json", "r") as f:
+        with open(workflow_path, "r") as f:
             workflow = json.load(f)
     except FileNotFoundError:
-        return {"error": "comfyui_api_wan2_2_5B_t2v.json not found. Please provide the workflow file in the agents directory."}
+        return {"error": f"{workflow_path} not found."}
 
     # Construct the prompt from all scenes
     prompt_parts = []

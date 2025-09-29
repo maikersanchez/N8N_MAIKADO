@@ -9,7 +9,7 @@ app = FastAPI()
 
 class WebDeveloperInput(BaseModel):
     page_structure: Dict[str, Any] # JSON structure from Architect Agent
-    copy: Dict[str, str] # Content from Copywriter Agent
+    content_copy: Dict[str, str] # Content from Copywriter Agent
     images: List[Dict[str, str]] # URLs/data from Image Generator Agent
     videos: List[Dict[str, str]] = [] # URLs/data from Video Generator Agent (if implemented)
 
@@ -20,7 +20,7 @@ async def render_html(input_data: WebDeveloperInput):
     # It will involve:
     # 1. Parsing input_data.page_structure
     # 2. Mapping sections/elements to React components (Acernity UI, Magic UI)
-    # 3. Populating components with input_data.copy, input_data.images, input_data.videos
+    # 3. Populating components with input_data.content_copy, input_data.images, input_data.videos
     # 4. Rendering the React components to a static HTML string.
     #
     # This part is complex and would typically involve:
