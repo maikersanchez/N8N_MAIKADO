@@ -8,6 +8,7 @@ fastapi==0.116.1
 fastapi_cors==0.0.6
 h11==0.16.0
 httptools==0.6.4
+httpx
 idna==3.10
 marshmallow==4.0.1
 minio
