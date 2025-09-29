@@ -9,6 +9,7 @@ import datetime
 from urllib.parse import urlparse
 import httpx
 import json
+import asyncio
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -102,19 +103,63 @@ async def generate_videos(input_data: VideoGeneratorInput):
                 except S3Error as exc:
                     print(f"Error uploading request to MinIO: {exc}")
 
-            # Call the ComfyUI Modal endpoint
+            # Start the ComfyUI job
             async with httpx.AsyncClient(timeout=None) as client:
-                response = await client.post(COMFYUI_MODAL_ENDPOINT, json=workflow)
+                response = await client.post(f"{COMFYUI_MODAL_ENDPOINT}/prompt", json=workflow)
                 response.raise_for_status()
-                video_data = response.content
+                job_data = response.json()
+                prompt_id = job_data.get("prompt_id")
+
+                if not prompt_id:
+                    raise Exception("prompt_id not found in the response from ComfyUI")
+
+            # Poll for job completion
+            video_data = None
+            for _ in range(60): # Poll for a maximum of 7 * 60 = 420 seconds (7 minutes)
+                await asyncio.sleep(10)
+                async with httpx.AsyncClient(timeout=None) as client:
+                    history_response = await client.get(f"{COMFYUI_MODAL_ENDPOINT}/history/{prompt_id}")
+                    history_data = history_response.json()
+
+                    if history_data and prompt_id in history_data and history_data[prompt_id].get("status", {}).get("completed"):
+                        # Job is complete, extract filename and subfolder
+                        outputs = history_data[prompt_id].get("outputs", {})
+                        
+                        # Extract filename
+                        video_filename = None
+                        all_images = [img for node in outputs.values() for img in node.get("images", [])]
+                        output_image = next((img for img in all_images if img.get("type") == "output"), None)
+                        if output_image:
+                            video_filename = output_image.get("filename")
+
+                        # Extract subfolder from node '58'
+                        subfolder = outputs.get("58", {}).get("images", [{}])[0].get("subfolder")
+
+                        if not video_filename:
+                            raise Exception("Video filename not found in the completed job history.")
+
+                        # Fetch the video
+                        async with httpx.AsyncClient(timeout=None) as video_client:
+                            params = {"filename": video_filename}
+                            if subfolder:
+                                params["subfolder"] = subfolder
+                            
+                            video_response = await video_client.get(f"{COMFYUI_MODAL_ENDPOINT}/view", params=params)
+                            video_response.raise_for_status()
+                            video_data = video_response.content
+                        break
+            
+            if not video_data:
+                raise Exception("Job timed out or failed to complete.")
+
 
             if minio_client:
                 # Create a unique filename for the video
                 timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-                video_filename = f"video_{i+1}_{timestamp}.mp4"
+                video_filename_minio = f"video_{i+1}_{timestamp}.mp4"
                 
                 # Define the object name in MinIO
-                video_object_name = f"{input_data.script_data.title}/{video_filename}"
+                video_object_name = f"{input_data.script_data.title}/{video_filename_minio}"
                 
                 # Upload the video to MinIO
                 try:
