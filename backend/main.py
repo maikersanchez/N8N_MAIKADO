@@ -8,6 +8,7 @@ import httpx
 import os
 from dotenv import load_dotenv
 from tenacity import retry, stop_after_attempt, wait_fixed
+import json
 
 load_dotenv()
 
@@ -79,7 +80,7 @@ async def create_job(payload: dict, background_tasks: BackgroundTasks):
     job_record = {
         "job_id": job_id,
         "status": "pending",
-        "input_parameters": payload,
+        "input_parameters": json.dumps(payload),
     }
 
     async with httpx.AsyncClient() as client:
