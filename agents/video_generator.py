@@ -79,7 +79,7 @@ async def generate_videos(input_data: VideoGeneratorInput):
     full_prompt = " ".join(prompt_parts)
 
     # Modify the workflow with the new prompt
-    workflow["6"]["inputs"]["text"] = full_prompt
+    workflow["prompt"]["6"]["inputs"]["text"] = full_prompt
 
     generated_videos_list: List[GeneratedVideo] = []
 
