@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import os
-from typing import List
+from typing import List, Optional
 from minio import Minio
 from minio.error import S3Error
 import io
@@ -9,6 +9,7 @@ import datetime
 from urllib.parse import urlparse
 from huggingface_hub import InferenceClient
 from PIL import Image
+import httpx
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -42,6 +43,7 @@ if MINIO_ENDPOINT_URL:
 class ProductData(BaseModel):
     product_name: str
     raw_description: str
+    image_urls: Optional[List[str]] = []
 
 class ImageGeneratorInput(BaseModel):
     product_data: ProductData
@@ -57,18 +59,36 @@ async def generate_images(input_data: ImageGeneratorInput):
     prompt_text = f"""
     A professional, high-quality product image of: {input_data.product_data.product_name}.
     {input_data.product_data.raw_description}.
-    The image should be suitable for an e-commerce website.
+    The image should be suitable for an e-commerce website, with a clean background.
     """
 
     generated_images_list: List[GeneratedImage] = []
 
+    reference_image_bytes = None
+    if input_data.product_data.image_urls:
+        try:
+            async with httpx.AsyncClient() as client_http:
+                response = await client_http.get(input_data.product_data.image_urls[0])
+                response.raise_for_status()
+                reference_image_bytes = response.content
+        except Exception as e:
+            print(f"Error fetching reference image: {e}")
+
+
     for i in range(input_data.image_count):
         try:
             # Generate the image
-            image: Image.Image = client.text_to_image(
-                prompt_text,
-                model="stabilityai/stable-diffusion-xl-base-1.0",
-            )
+            if reference_image_bytes:
+                image: Image.Image = client.image_to_image(
+                    image=reference_image_bytes,
+                    prompt=prompt_text,
+                    model="stabilityai/stable-diffusion-xl-refiner-1.0", # Using a refiner model for image-to-image
+                )
+            else:
+                image: Image.Image = client.text_to_image(
+                    prompt_text,
+                    model="stabilityai/stable-diffusion-xl-base-1.0",
+                )
 
             # Convert PIL image to bytes
             img_byte_arr = io.BytesIO()
@@ -94,7 +114,10 @@ async def generate_images(input_data: ImageGeneratorInput):
                     )
                     
                     # Construct the public URL
-                    image_url = f"http{'s' if MINIO_USE_SSL else ''}://{MINIO_ENDPOINT_URL}/{MINIO_BUCKET}/{object_name}"
+                    base_url = MINIO_ENDPOINT_URL
+                    if not base_url.startswith("http"):
+                        base_url = f"http{'s' if MINIO_USE_SSL else ''}://{base_url}"
+                    image_url = f"{base_url}/{MINIO_BUCKET}/{object_name}"
                     
                     generated_images_list.append(GeneratedImage(
                         url=image_url,

@@ -9,7 +9,7 @@ app = FastAPI()
 
 # Configure Google Generative AI (ensure GOOGLE_API_KEY is set in environment)
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-pro') # Using gemini-pro for text generation
+model = genai.GenerativeModel('gemini-pro') # Using gemini-pro for text generation
 
 class ProductData(BaseModel):
     product_name: str
@@ -24,10 +24,10 @@ class CopywriterInput(BaseModel):
 
 @app.post("/")
 async def generate_copy(input_data: CopywriterInput):
-    # --- Prompt Engineering for UGC Video Script ---
+    # --- Prompt Engineering for UGC Video Script and Landing Page Copy ---
     prompt = f"""
-    Eres un copywriter experto en marketing digital, especializado en la creación de guiones para videos de contenido generado por el usuario (UGC) de alta conversión.
-    Tu objetivo es generar un guion de video persuasivo que siga una estructura clara para un anuncio de video corto.
+    Eres un copywriter experto en marketing digital, especializado en la creación de contenido de alta conversión.
+    Tu objetivo es generar tanto un guion de video persuasivo como el texto completo para una landing page.
 
     Información del Producto:
     Nombre: {input_data.product_data.product_name}
@@ -38,44 +38,70 @@ async def generate_copy(input_data: CopywriterInput):
     Idioma de salida: {input_data.language}
     Moneda de destino: {input_data.currency}
 
-    Genera el siguiente guion para un video UGC:
+    Genera el siguiente contenido en formato JSON:
 
-    **Estructura del Guion:**
-    1.  **Hook (Gancho):** Una primera escena impactante que capte la atención en los primeros 3 segundos.
-    2.  **Problem (Problema):** Muestra el problema que el producto resuelve, conectando con los dolores del cliente.
-    3.  **Solution (Solución):** Presenta el producto como la solución definitiva.
-    4.  **Call to Action (Llamado a la Acción):** Un llamado a la acción claro y convincente, mencionando el precio en la moneda de destino si es posible.
+    1.  **Guion de Video UGC:** Un guion de video que siga la estructura de Hook, Problema, Solución y Llamado a la Acción.
+    2.  **Texto para Landing Page:** Todo el texto necesario para una landing page de alta conversión, incluyendo headline, subheadline, beneficios, llamado a la acción, etc.
 
-    **Formato de Salida (JSON con Storyboard):**
+    **Formato de Salida (JSON):**
     ```json
     {{
-        "title": "Guion de Video UGC para {input_data.product_data.product_name}",
-        "ugc_video_script": [
-            {{
-                "scene": 1,
-                "time": "0-3s",
-                "visuals": "Descripción visual de la escena (ej. 'Primer plano de una persona frustrada con [problema]').",
-                "dialogue": "Línea de diálogo o texto en pantalla."
-            }},
-            {{
-                "scene": 2,
-                "time": "3-8s",
-                "visuals": "Descripción visual de la escena (ej. 'Mostrando el [problema] en acción').",
-                "dialogue": "Línea de diálogo o texto en pantalla."
-            }},
-            {{
-                "scene": 3,
-                "time": "8-12s",
-                "visuals": "Descripción visual de la escena (ej. 'El producto [nombre del producto] entra en escena y se muestra cómo funciona').",
-                "dialogue": "Línea de diálogo o texto en pantalla."
-            }},
-            {{
-                "scene": 4,
-                "time": "12-15s",
-                "visuals": "Descripción visual de la escena (ej. 'Persona sonriendo y usando el producto con satisfacción. Logo y URL del sitio web en pantalla').",
-                "dialogue": "Línea de diálogo o texto en pantalla con el Call to Action."
-            }}
-        ]
+        "ugc_video_script": {{
+            "title": "Guion de Video UGC para {input_data.product_data.product_name}",
+            "scenes": [
+                {{
+                    "scene": 1,
+                    "time": "0-3s",
+                    "visuals": "Descripción visual de la escena.",
+                    "dialogue": "Línea de diálogo o texto en pantalla."
+                }},
+                {{
+                    "scene": 2,
+                    "time": "3-8s",
+                    "visuals": "Descripción visual de la escena.",
+                    "dialogue": "Línea de diálogo o texto en pantalla."
+                }},
+                {{
+                    "scene": 3,
+                    "time": "8-12s",
+                    "visuals": "Descripción visual de la escena.",
+                    "dialogue": "Línea de diálogo o texto en pantalla."
+                }},
+                {{
+                    "scene": 4,
+                    "time": "12-15s",
+                    "visuals": "Descripción visual de la escena.",
+                    "dialogue": "Línea de diálogo o texto en pantalla con el Call to Action."
+                }}
+            ]
+        }},
+        "landing_page_copy": {{
+            "headline": "El titular principal de la página.",
+            "subheadline": "Un subtitulo que complemente al titular.",
+            "features_benefits": [
+                {{
+                    "feature": "Característica 1",
+                    "benefit": "Beneficio de la característica 1."
+                }},
+                {{
+                    "feature": "Característica 2",
+                    "benefit": "Beneficio de la característica 2."
+                }}
+            ],
+            "call_to_action": "El texto para el botón de llamado a la acción principal.",
+            "social_proof": "Un testimonio o prueba social.",
+            "faq": [
+                {{
+                    "question": "Pregunta frecuente 1",
+                    "answer": "Respuesta a la pregunta 1."
+                }},
+                {{
+                    "question": "Pregunta frecuente 2",
+                    "answer": "Respuesta a la pregunta 2."
+                }}
+            ],
+            "founder_note": "Una nota del fundador para conectar con los clientes."
+        }}
     }}
     ```
     """
@@ -91,8 +117,7 @@ async def generate_copy(input_data: CopywriterInput):
             parsed_json = json.loads(json_str)
             return parsed_json
         except (json.JSONDecodeError, IndexError):
-            return {"error": "Failed to parse LLM response as JSON", "raw_response": generated_content}
+            return {{"error": "Failed to parse LLM response as JSON", "raw_response": generated_content}}
 
     except Exception as e:
-        return {"error": f"Error calling Gemini API: {e}"}
-
+        return {{"error": f"Error calling Gemini API: {e}"}}

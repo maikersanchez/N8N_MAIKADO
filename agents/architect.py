@@ -12,8 +12,17 @@ app = FastAPI()
 genai.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 model = genai.GenerativeModel('models/gemini-2.5-pro') # Using gemini-2.5-pro for text generation
 
+class LandingPageCopy(BaseModel):
+    headline: str
+    subheadline: str
+    features_benefits: List[Dict[str, str]]
+    call_to_action: str
+    social_proof: str
+    faq: List[Dict[str, str]]
+    founder_note: str
+
 class ContentData(BaseModel):
-    content_copy: Dict[str, str] # Output from Copywriter Agent
+    landing_page_copy: LandingPageCopy
     images: List[Dict[str, str]] # Output from Image Generator Agent
     videos: List[Dict[str, str]] = [] # Output from Video Generator Agent (if implemented)
 
@@ -38,7 +47,7 @@ async def generate_page_structure(input_data: ArchitectInput):
     Idioma: {input_data.language}
 
     Contenido disponible:
-    Texto (Copywriter Agent): {json.dumps(input_data.content_data.content_copy, indent=2)}
+    Texto (Copywriter Agent): {json.dumps(input_data.content_data.landing_page_copy.dict(), indent=2)}
     Imágenes (Image Generator Agent): {json.dumps(input_data.content_data.images, indent=2)}
     Videos (Video Generator Agent): {json.dumps(input_data.content_data.videos, indent=2)}
 
@@ -68,10 +77,10 @@ async def generate_page_structure(input_data: ArchitectInput):
                 "section_id": "hero",
                 "type": "hero",
                 "elements": [
-                    {{"type": "title", "content_ref": "copy.headline"}},
-                    {{"type": "subtitle", "content_ref": "copy.subheadline"}},
+                    {{"type": "title", "content_ref": "landing_page_copy.headline"}},
+                    {{"type": "subtitle", "content_ref": "landing_page_copy.subheadline"}},
                     {{"type": "main_visual", "content_ref": "images[0].url"}},
-                    {{"type": "cta_button", "content_ref": "copy.call_to_action"}}
+                    {{"type": "cta_button", "content_ref": "landing_page_copy.call_to_action"}}
                 ]
             }},
             {{
@@ -79,7 +88,7 @@ async def generate_page_structure(input_data: ArchitectInput):
                 "type": "features",
                 "elements": [
                     {{"type": "heading", "content": "Características Clave"}},
-                    {{"type": "feature_list", "content_ref": "copy.features_benefits"}}
+                    {{"type": "feature_list", "content_ref": "landing_page_copy.features_benefits"}}
                 ]
             }},
             // ... more sections following the A/B fold principles ...
@@ -87,7 +96,7 @@ async def generate_page_structure(input_data: ArchitectInput):
                 "section_id": "final_cta",
                 "type": "cta",
                 "elements": [
-                    {{"type": "cta_button", "content_ref": "copy.call_to_action"}}
+                    {{"type": "cta_button", "content_ref": "landing_page_copy.call_to_action"}}
                 ]
             }}
         ]
@@ -102,8 +111,8 @@ async def generate_page_structure(input_data: ArchitectInput):
             parsed_json = json.loads(generated_structure)
             return parsed_json
         except json.JSONDecodeError:
-            return {"error": "Failed to parse LLM response as JSON", "raw_response": generated_structure}
+            return {{"error": "Failed to parse LLM response as JSON", "raw_response": generated_structure}}
 
     except Exception as e:
-        return {"error": f"Error calling Gemini API: {e}"}
+        return {{"error": f"Error calling Gemini API: {e}"}}
 
